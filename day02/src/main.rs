@@ -1,13 +1,22 @@
+use regex::Regex;
 use std::fs;
 
 fn validate1(line: &str) -> bool {
-    let mut parts = line.split(" ");
-    let mut range = parts.next().unwrap().split("-");
-    let min = range.next().unwrap().parse::<usize>().unwrap();
-    let max = range.next().unwrap().parse::<usize>().unwrap();
-    let character: char = parts.next().unwrap().chars().next().unwrap();
-    let password = parts.next().unwrap();
-    let total = password.chars().filter(|&x| x == character).count();
+    let re = Regex::new(r"^(\d+)-(\d+) ([a-z]): (.*)$").unwrap();
+    let parts = re.captures(line).unwrap();
+    let min = parts
+        .get(1)
+        .map_or("", |m| m.as_str())
+        .parse::<usize>()
+        .unwrap();
+    let max = parts
+        .get(2)
+        .map_or("", |m| m.as_str())
+        .parse::<usize>()
+        .unwrap();
+    let character = parts.get(3).map_or("", |m| m.as_str());
+    let password = parts.get(4).map_or("", |m| m.as_str());
+    let total = password.chars().filter(|&x| x.to_string() == character).count();
     if (min <= total) && (total <= max) {
         return true;
     } else {
@@ -17,15 +26,13 @@ fn validate1(line: &str) -> bool {
 
 fn validate2(line: &str) -> bool {
     let mut parts = line.split(" ");
-    let mut range = parts.next().unwrap().split("-");
+    let range = parts.next().unwrap().split("-");
     let character: char = parts.next().unwrap().chars().next().unwrap();
     let password = parts.next().unwrap();
 
     let counter = range
         .filter(|&x| {
-            password
-                .chars()
-                .nth(x.parse::<usize>().unwrap() - 1)
+            password.chars().nth(x.parse::<usize>().unwrap() - 1)
                 == Some(character)
         })
         .count();
